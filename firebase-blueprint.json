@@ -1,0 +1,38 @@
+{
+  "entities": {
+    "userProfile": {
+      "title": "User Profile",
+      "description": "User settings and profile information",
+      "type": "object",
+      "properties": {
+        "targetBandScore": { "type": "number", "description": "Target IELTS band score" },
+        "testDate": { "type": "string", "description": "Planned test date (ISO 8601)" },
+        "weeklyStudyHours": { "type": "number", "description": "Target study hours per week" }
+      }
+    },
+    "videoProgress": {
+      "title": "Video Progress",
+      "description": "Progress record for a specific video",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "videoId": { "type": "string" },
+        "status": { "type": "string", "enum": ["not_started", "in_progress", "completed"] },
+        "completedAt": { "type": "string" },
+        "lastOpenedAt": { "type": "string" },
+        "notes": { "type": "string", "maxLength": 1000 }
+      },
+      "required": ["userId", "videoId", "status"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": "userProfile",
+      "description": "Stores user settings and profile."
+    },
+    "video_progress/{progressId}": {
+      "schema": "videoProgress",
+      "description": "Stores user progress for videos."
+    }
+  }
+}

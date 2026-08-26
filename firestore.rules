@@ -1,0 +1,51 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() { return request.auth != null; }
+    function isOwner(userId) { return request.auth.uid == userId; }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+
+    // Validation for User Profile
+    function isValidUserProfile(data) {
+      return (
+        (!('targetBandScore' in data) || data.targetBandScore is number) &&
+        (!('testDate' in data) || data.testDate is string) &&
+        (!('weeklyStudyHours' in data) || data.weeklyStudyHours is number)
+      );
+    }
+
+    // Match users
+    match /users/{userId} {
+      allow read: if isSignedIn() && isOwner(userId);
+      allow create: if isSignedIn() && isOwner(userId) && isValidId(userId) && isValidUserProfile(incoming());
+      allow update: if isSignedIn() && isOwner(userId) && isValidUserProfile(incoming());
+    }
+
+    // Validation for Video Progress
+    function isValidVideoProgress(data) {
+      return (
+        data.userId is string && data.userId == request.auth.uid &&
+        data.videoId is string && data.videoId.size() <= 128 &&
+        data.status in ['not_started', 'in_progress', 'completed'] &&
+        (!('completedAt' in data) || data.completedAt is string) &&
+        (!('lastOpenedAt' in data) || data.lastOpenedAt is string) &&
+        (!('notes' in data) || (data.notes is string && data.notes.size() <= 1000))
+      );
+    }
+
+    // Match video progress
+    match /video_progress/{progressId} {
+      allow read: if isSignedIn() && existing().userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(progressId) && isValidVideoProgress(incoming()) && incoming().userId == request.auth.uid;
+      allow update: if isSignedIn() && existing().userId == request.auth.uid && incoming().userId == request.auth.uid && isValidVideoProgress(incoming());
+    }
+  }
+}

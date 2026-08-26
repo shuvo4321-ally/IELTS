@@ -1,0 +1,6 @@
+{
+  "name": "IELTS Core",
+  "description": "A focused, step-by-step learning platform for your IELTS journey.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
